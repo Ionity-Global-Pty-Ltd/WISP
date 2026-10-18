@@ -2,6 +2,10 @@
 
 Ionity (Pty) Ltd | AEDI | Policy 986 AED
 
+## 1.2.1 - 2026-10-18
+
+- **Realistic screen borders.** The active-screen light now falls off from the bezel like real ambient light: a feathered, gaussian-blurred rounded frame (two passes for a soft tail) replaces the hard edge band - no straight lines, no corner seams, no hairline rim. The aurora colours blend through intermediate tones, and a faint dither prevents gradient banding.
+
 ## 1.2.0 - 2026-10-18
 
 - **Case RGB sync.** WISP drives your PC lighting through the OpenRGB SDK server (fans, RAM, GPU, motherboard, strips, even monitors). *Mirror effects* makes Pulse breathe and Flow race around the LEDs, and every window switch sends a wisp sweeping through the case; *Match colour* holds the aura colour (Ionity Flow and Spectrum spread across the LEDs). Brightness, host/port and an OpenRGB profile to restore when sync stops. New **Case RGB** page with live strip preview and device list; tray toggle. Verified against a real OpenRGB server (ENE, ZOTAC RTX 3080, ViewSonic XG270QG).

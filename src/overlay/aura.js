@@ -29,9 +29,44 @@ function create(opts) {
   const root = host.style;
   // build the screen-aura layers once
   if ($screen && !$screen.querySelector('.sa-band')) {
-    $screen.innerHTML = '<div class="sa-corners"></div><div class="sa-band"><div class="sa-aurora"></div><div class="sa-focus"></div></div><div class="sa-rim"></div>';
+    $screen.innerHTML = '<div class="sa-band"><div class="sa-aurora"></div><div class="sa-focus"></div><div class="sa-grain"></div></div>';
   }
   if (opts.phase != null) root.setProperty('--rot0', (opts.phase % 360) + 'deg');
+  // feathered edge mask for the screen aura: a rounded frame, gaussian-blurred,
+  // rendered small and stretched (smooth by nature), regenerated on resize / depth change
+  let maskKey = '';
+  function paintScreenMask() {
+    if (!$screen) return;
+    const band = $screen.querySelector('.sa-band');
+    const sz = sizeOf();
+    const bw = parseFloat(root.getPropertyValue('--bw')) || 90;
+    const k = 0.25;                                   // work at quarter resolution
+    const w = Math.max(16, Math.round(sz.width * k)), h = Math.max(16, Math.round(sz.height * k));
+    const key = [w, h, bw].join('x');
+    if (!band || key === maskKey) return;
+    maskKey = key;
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const d = bw * k;                                 // band depth in mask pixels
+    const r = d * 1.6;                                // inner corner radius
+    g.filter = `blur(${(d * 0.55).toFixed(1)}px)`;
+    g.fillStyle = '#000';
+    g.beginPath();
+    g.rect(-d * 2, -d * 2, w + d * 4, h + d * 4);     // outer edge beyond the screen keeps the bezel bright
+    g.roundRect(d * 0.55, d * 0.55, w - d * 1.1, h - d * 1.1, r);
+    g.fill('evenodd');
+    // a second, wider and fainter pass gives the long soft tail real light has
+    g.filter = `blur(${(d * 1.4).toFixed(1)}px)`;
+    g.globalAlpha = 0.25;
+    g.beginPath();
+    g.rect(-d * 2, -d * 2, w + d * 4, h + d * 4);
+    g.roundRect(d * 1.2, d * 1.2, w - d * 2.4, h - d * 2.4, r * 1.6);
+    g.fill('evenodd');
+    const url = `url(${c.toDataURL('image/png')})`;
+    band.style.webkitMaskImage = url;
+    band.style.maskImage = url;
+  }
   const sizeOf = opts.size || (() => ({ width: host.clientWidth, height: host.clientHeight }));
   const pixelRatio = opts.pixelRatio || (() => global.devicePixelRatio || 1);
   let destroyed = false;
@@ -71,7 +106,7 @@ function create(opts) {
     canvas.width = Math.max(1, Math.round(sz.width * dpr));
     canvas.height = Math.max(1, Math.round(sz.height * dpr));
   }
-  const onResize = () => { resizeCanvas(); kick(); };
+  const onResize = () => { resizeCanvas(); paintScreenMask(); kick(); };
   global.addEventListener('resize', onResize);
   resizeCanvas();
 
@@ -129,8 +164,9 @@ function create(opts) {
     root.setProperty('--i', (S.intensity / 100).toFixed(3));
     root.setProperty('--si', Math.min(1, 0.18 + S.screenIntensity / 100 * 0.95).toFixed(3));
     root.setProperty('--sg', (30 + S.screenIntensity * 1.1) + 'px');
-    root.setProperty('--bw', Math.round(46 + S.screenIntensity * 1.5) + 'px');
+    root.setProperty('--bw', Math.round(30 + S.screenIntensity * 1.1) + 'px');
     root.setProperty('--aurora', (42 / speedK()).toFixed(1) + 's');
+    paintScreenMask();
     root.setProperty('--breath', (3.6 / speedK()).toFixed(2) + 's');
     spriteKey = '';
     applyColors(performance.now());
@@ -170,7 +206,7 @@ function create(opts) {
   }
 
   function applyState(m) {
-    if (m.origin.width !== origin.width || m.origin.height !== origin.height) { origin = m.origin; resizeCanvas(); }
+    if (m.origin.width !== origin.width || m.origin.height !== origin.height) { origin = m.origin; resizeCanvas(); paintScreenMask(); }
     origin = m.origin;
     $screen.classList.toggle('on', !!m.screenActive);
     if (m.rect && m.origin.width && m.origin.height) {
