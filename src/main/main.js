@@ -24,6 +24,7 @@ const { Settings } = require('./settings');
 const { Overlays } = require('./overlays');
 const { createTracker } = require('./trackers');
 const { trayImage } = require('./trayIcon');
+const { RgbSync } = require('./rgb');
 const { PRESETS, STYLES, presetById } = require('../shared/presets');
 
 const DEBUG = process.argv.includes('--wisp-debug') || process.env.WISP_DEBUG === '1';
@@ -44,7 +45,8 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-let settings, overlays, tracker, tray, settingsWin = null;
+let settings, overlays, tracker, tray, settingsWin = null, rgb = null;
+let lastFocusId = null;
 let tickTimer = null, raiseTimer = null, lastTrackerError = '';
 const VERSION = app.getVersion();
 
@@ -89,6 +91,10 @@ function tick() {
     info = { kind: 'none' };
   }
   const state = computeState(info, settings.data);
+  if (info && info.kind === 'window' && info.id !== lastFocusId) {
+    if (lastFocusId !== null && rgb) rgb.focusChanged();
+    lastFocusId = info.id;
+  }
   if (DEBUG) {
     const k = JSON.stringify([info.kind, info.id, state.rect]);
     if (k !== lastLogged) { lastLogged = k; log('active', info.kind, info.id || '', JSON.stringify(state.rect), info.title || info.app || ''); }
@@ -150,6 +156,7 @@ function effectiveSettings() {
 function applySettings() {
   const eff = effectiveSettings();
   overlays.setSettings(eff);
+  if (rgb) rgb.apply(eff);
   updateTray();
   registerHotkeys();
   applyLoginItem();
@@ -202,6 +209,7 @@ function applyLoginItem() {
       return;
     }
     if (!app.isPackaged) return; // never register the dev electron binary
+    if (process.windowsStore) return; // MSIX: Windows manages start-up apps (Settings > Apps > Startup)
     const opts = { openAtLogin: want, openAsHidden: true, args: ['--hidden'] };
     if (process.env.PORTABLE_EXECUTABLE_FILE) opts.path = process.env.PORTABLE_EXECUTABLE_FILE;
     app.setLoginItemSettings(opts);
@@ -263,6 +271,7 @@ function buildMenu() {
     check('Wisps (orbiting light)', 'wisps'),
     check('Puller (glide between windows)', 'puller'),
     check('Hide over full-screen apps', 'hideOnFullscreen'),
+    check('Sync case RGB (OpenRGB)', 'rgbSync'),
     { type: 'separator' },
     { label: 'Settings...', click: () => openSettings() },
     check('Start with my computer', 'launchAtLogin'),
@@ -334,7 +343,9 @@ function settingsPayload() {
     dataFile: settings.file,
     displays: displaysPayload(),
     trayIcon: trayIconData(),
-    portable: !!process.env.PORTABLE_EXECUTABLE_DIR
+    rgb: rgb ? rgb.status() : { state: 'off', devices: [] },
+    portable: !!process.env.PORTABLE_EXECUTABLE_DIR,
+    store: !!process.windowsStore
   };
 }
 
@@ -354,7 +365,7 @@ ipcMain.handle('wisp:set', (_e, patch) => {
   if (!patch || typeof patch !== 'object') return settingsPayload();
   const allowed = ['enabled', 'presetId', 'color', 'style', 'windowAura', 'screenAura', 'wisps', 'puller', 'thickness',
     'glow', 'intensity', 'screenIntensity', 'speed', 'padding', 'radius', 'hideOnFullscreen', 'fps', 'launchAtLogin',
-    'hotkeyToggle', 'hotkeyCycle'];
+    'hotkeyToggle', 'hotkeyCycle', 'rgbSync', 'rgbMode', 'rgbBrightness', 'rgbHost', 'rgbPort', 'rgbRestoreProfile'];
   const clean = {};
   for (const k of allowed) if (k in patch) clean[k] = patch[k];
   if (clean.presetId && clean.presetId !== 'custom') {
@@ -391,6 +402,8 @@ app.whenReady().then(() => {
   if (Object.keys(patch).length) settings.set(patch);
 
   tracker = createTracker({ app, screen, log });
+  rgb = new RgbSync({ log });
+  rgb.onStatus = () => { broadcastToSettings(); };
   overlays.settings = effectiveSettings();
   overlays.rebuild();
   createTray();
@@ -425,6 +438,7 @@ app.on('will-quit', () => {
   stopEngine();
   globalShortcut.unregisterAll();
   try { tracker && tracker.stop(); } catch (_) {}
+  try { rgb && rgb.dispose(); } catch (_) {}
   try { settings && settings.flush(); } catch (_) {}
   try { overlays && overlays.destroy(); } catch (_) {}
 });

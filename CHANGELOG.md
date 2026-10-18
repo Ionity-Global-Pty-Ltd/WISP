@@ -2,6 +2,12 @@
 
 Ionity (Pty) Ltd | AEDI | Policy 986 AED
 
+## 1.2.0 - 2026-10-18
+
+- **Case RGB sync.** WISP drives your PC lighting through the OpenRGB SDK server (fans, RAM, GPU, motherboard, strips, even monitors). *Mirror effects* makes Pulse breathe and Flow race around the LEDs, and every window switch sends a wisp sweeping through the case; *Match colour* holds the aura colour (Ionity Flow and Spectrum spread across the LEDs). Brightness, host/port and an OpenRGB profile to restore when sync stops. New **Case RGB** page with live strip preview and device list; tray toggle. Verified against a real OpenRGB server (ENE, ZOTAC RTX 3080, ViewSonic XG270QG).
+- **Gradient screen aura.** The active screen now glows with a slowly turning aurora in the aura's colour family, a hairline gradient bezel, colour pools in the corners and a bloom that gathers on the side of the screen where your focused window is. Every display gets its own phase.
+- **Microsoft Store ready.** `npm run dist:store` builds MSIX packages; see `docs/MICROSOFT-STORE.md`.
+
 ## 1.1.0 - 2026-10-18
 
 - **Smoother puller.** Switching windows now glides on a smootherstep curve (no snap, no overshoot) timed to the distance travelled, and the outline dissolves into a stream of ~44 wisp particles that fly across on curved paths and re-form the new outline, led by the comet.

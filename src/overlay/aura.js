@@ -27,6 +27,11 @@ function create(opts) {
   const canvas = opts.canvas;
   const ctx = canvas.getContext('2d');
   const root = host.style;
+  // build the screen-aura layers once
+  if ($screen && !$screen.querySelector('.sa-band')) {
+    $screen.innerHTML = '<div class="sa-corners"></div><div class="sa-band"><div class="sa-aurora"></div><div class="sa-focus"></div></div><div class="sa-rim"></div>';
+  }
+  if (opts.phase != null) root.setProperty('--rot0', (opts.phase % 360) + 'deg');
   const sizeOf = opts.size || (() => ({ width: host.clientWidth, height: host.clientHeight }));
   const pixelRatio = opts.pixelRatio || (() => global.devicePixelRatio || 1);
   let destroyed = false;
@@ -102,6 +107,8 @@ function create(opts) {
       colorNow = a; color2Now = b;
       root.setProperty('--c', a);
       root.setProperty('--c2', b);
+      if (S.special === 'gradient') { root.setProperty('--c3', '#5746E3'); root.setProperty('--c4', '#00D4B8'); }
+      else { root.removeProperty('--c3'); root.removeProperty('--c4'); }
       root.setProperty('--line-bg', S.special === 'gradient'
         ? 'linear-gradient(135deg,#5746E3 0%,#3366FF 35%,#00D2FF 70%,#00D4B8 100%)'
         : (S.special === 'spectrum' ? `linear-gradient(135deg,${a},${b})` : a));
@@ -120,8 +127,10 @@ function create(opts) {
     root.setProperty('--t', S.thickness + 'px');
     root.setProperty('--g', glowPx() + 'px');
     root.setProperty('--i', (S.intensity / 100).toFixed(3));
-    root.setProperty('--si', (S.screenIntensity / 100).toFixed(3));
+    root.setProperty('--si', Math.min(1, 0.18 + S.screenIntensity / 100 * 0.95).toFixed(3));
     root.setProperty('--sg', (30 + S.screenIntensity * 1.1) + 'px');
+    root.setProperty('--bw', Math.round(46 + S.screenIntensity * 1.5) + 'px');
+    root.setProperty('--aurora', (42 / speedK()).toFixed(1) + 's');
     root.setProperty('--breath', (3.6 / speedK()).toFixed(2) + 's');
     spriteKey = '';
     applyColors(performance.now());
@@ -164,6 +173,14 @@ function create(opts) {
     if (m.origin.width !== origin.width || m.origin.height !== origin.height) { origin = m.origin; resizeCanvas(); }
     origin = m.origin;
     $screen.classList.toggle('on', !!m.screenActive);
+    if (m.rect && m.origin.width && m.origin.height) {
+      // the edge light gathers on the side of the screen where the focused window is
+      const fx = ((m.rect.x + m.rect.width / 2 - m.origin.x) / m.origin.width) * 100;
+      const fy = ((m.rect.y + m.rect.height / 2 - m.origin.y) / m.origin.height) * 100;
+      root.setProperty('--fx', Math.max(0, Math.min(100, fx)).toFixed(1) + '%');
+      root.setProperty('--fy', Math.max(0, Math.min(100, fy)).toFixed(1) + '%');
+      root.setProperty('--rim-angle', Math.round(Math.atan2(fy - 50, fx - 50) * 180 / Math.PI + 90) + 'deg');
+    }
     maximized = !!m.maximized;
     const prevId = targetId;
     const now = performance.now();

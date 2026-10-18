@@ -6,6 +6,8 @@
     screenEl: document.getElementById('screen'),
     frameEl: document.getElementById('frame'),
     canvas: document.getElementById('fx'),
+    // each display gets its own phase so every screen's aurora is a little different
+    phase: (Number(new URLSearchParams(location.search).get('display')) || 0) * 137,
     size: () => ({ width: window.innerWidth, height: window.innerHeight })
   });
   window.wisp.onSettings(s => aura.setSettings(s));

@@ -34,6 +34,12 @@ function sanitize(raw) {
   s.hideOnFullscreen = !!s.hideOnFullscreen;
   s.launchAtLogin = !!s.launchAtLogin;
   s.firstRun = !!s.firstRun;
+  s.rgbSync = !!s.rgbSync;
+  if (s.rgbMode !== 'match' && s.rgbMode !== 'effects') s.rgbMode = 'effects';
+  s.rgbBrightness = clamp(s.rgbBrightness, 0, 100, DEFAULTS.rgbBrightness);
+  if (typeof s.rgbRestoreProfile !== 'string') s.rgbRestoreProfile = '';
+  s.rgbPort = Math.round(clamp(s.rgbPort, 1, 65535, DEFAULTS.rgbPort));
+  if (typeof s.rgbHost !== 'string' || !/^[a-z0-9.\-:]{1,253}$/i.test(s.rgbHost)) s.rgbHost = DEFAULTS.rgbHost;
   if (!isHex(s.color)) s.color = DEFAULTS.color;
   s.color = s.color.toUpperCase();
   if (s.presetId !== 'custom' && !PRESETS.some(p => p.id === s.presetId)) s.presetId = 'custom';

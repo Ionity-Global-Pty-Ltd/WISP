@@ -25,6 +25,7 @@
   // ------------------------------------------------------------ helpers
   const fmt = (k, v) => k === 'thickness' || k === 'padding' ? v + ' px'
     : k === 'radius' ? (v < 0 ? 'auto' : v + ' px') : k === 'fps' ? v + ' fps' : v + '%';
+  const NUMERIC = new Set(['rgbPort']);
 
   function hsl(h, s = 92, l = 60) {
     s /= 100; l /= 100;
@@ -135,6 +136,7 @@
     $('#k1b').textContent = pretty(S.hotkeyToggle) || 'off';
     $('#k2').textContent = pretty(S.hotkeyCycle) || 'off';
 
+    const lal = document.querySelector('[data-k="launchAtLogin"]'); if (lal) lal.closest('.row').style.display = P.store ? 'none' : '';
     $('#enabled').checked = S.enabled;
     $('#enabledLbl').textContent = S.enabled ? 'Aura on' : 'Aura paused';
     document.body.classList.toggle('off', !S.enabled);
@@ -166,7 +168,58 @@
     pushPreviewSettings();
     pushPreviewState();
     drawDisplays();
+    renderRgb();
   }
+
+  // ------------------------------------------------------------ case RGB
+  const STRIP = 20;
+  (function () { const st = $('#rgbStrip'); st.innerHTML = '<i></i>'.repeat(STRIP); })();
+  function renderRgb() {
+    const r = P.rgb || { state: 'off', devices: [], profiles: [] };
+    const box = $('#rgbStatus');
+    box.className = 'card rgb-status ' + (S.rgbSync ? r.state : 'off');
+    const leds = (r.devices || []).reduce((a, d) => a + d.leds, 0);
+    const label = !S.rgbSync ? ['Off', 'Turn sync on to light the case with your aura.']
+      : r.state === 'connected' ? ['Synced', `${r.devices.length} device${r.devices.length === 1 ? '' : 's'} \u00b7 ${leds} LEDs follow WISP`]
+      : r.state === 'connecting' ? ['Connecting\u2026', `Looking for OpenRGB at ${S.rgbHost}:${S.rgbPort}`]
+      : ['Waiting for OpenRGB', (r.error || 'Not reachable') + ` \u2014 retrying every 5 s (${S.rgbHost}:${S.rgbPort})`];
+    $('#rgbState').textContent = label[0];
+    $('#rgbMsg').textContent = label[1];
+    $$('#rgbMode button').forEach(b => b.classList.toggle('on', b.dataset.v === S.rgbMode));
+    $('#rgbDevices').innerHTML = (r.devices && r.devices.length)
+      ? r.devices.map(d => `<div><span><b>${esc(d.name)}</b>${d.vendor ? ' \u00b7 ' + esc(d.vendor) : ''}</span><span>${d.leds} LED${d.leds === 1 ? '' : 's'}</span></div>`).join('')
+      : `<div><span>${S.rgbSync ? 'No devices reported yet' : 'Sync is off'}</span></div>`;
+    const sel = $('#rgbProfile');
+    const opts = ['', ...(r.profiles || [])];
+    if (S.rgbRestoreProfile && !opts.includes(S.rgbRestoreProfile)) opts.push(S.rgbRestoreProfile);
+    sel.innerHTML = opts.map(o => `<option value="${esc(o)}">${o ? esc(o) : 'None \u2014 keep the aura colour'}</option>`).join('');
+    sel.value = S.rgbRestoreProfile || '';
+  }
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+  // animated strip preview - same maths as the real sync
+  let sweepAt = -1e9, lastActive = null;
+  setInterval(() => {
+    if (!S || !$('.page[data-page="rgb"]').classList.contains('on')) return;
+    const t = performance.now() / 1000, k = 0.25 + S.speed / 100 * 1.75;
+    const fx = S.rgbMode !== 'match' && S.enabled;
+    const sweep = (performance.now() - sweepAt) / 650;
+    const [c1, c2] = brandColours();
+    const rgbOf = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+    const a = rgbOf(c1), b = rgbOf(special() === 'gradient' ? '#00D4B8' : c2);
+    $$('#rgbStrip i').forEach((el, i) => {
+      const u = i / (STRIP - 1);
+      let c = special() === 'spectrum' ? rgbOf(hsl((t * 36 * k + u * 140) % 360)) : special() === 'gradient' ? a.map((v, j) => v + (b[j] - v) * u) : a;
+      let L = 1;
+      if (fx && S.style === 'pulse') L = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(t * Math.PI * 2 / (3.6 / k)));
+      if (fx && S.style === 'flow') { L = 0.32; for (const h of [(t * 0.22 * k) % 1, (t * 0.22 * k + .5) % 1]) { let d = h - u; if (d < 0) d += 1; if (d < .22) L = Math.max(L, Math.pow(1 - d / .22, 1.6)); } }
+      if (fx && sweep < 1.05) { const w = Math.exp(-Math.pow((u - (sweep * 1.25 - .1)) / .09, 2)); c = c.map(v => v + (255 - v) * .65 * w); L = Math.max(L, w); }
+      L *= (S.rgbBrightness ?? 100) / 100 * (S.rgbSync ? 1 : 0.25);
+      const col = `rgb(${Math.round(c[0] * L)},${Math.round(c[1] * L)},${Math.round(c[2] * L)})`;
+      el.style.background = col;
+      el.style.boxShadow = L > .35 ? `0 0 8px ${col}` : 'none';
+    });
+  }, 1000 / 30);
 
   async function set(patch) {
     Object.assign(S, patch);
@@ -188,8 +241,10 @@
     const k = el.dataset.k;
     if (el.type === 'checkbox') el.addEventListener('change', () => set({ [k]: el.checked }));
     else if (el.type === 'range') el.addEventListener('input', () => set({ [k]: Number(el.value) }));
-    else el.addEventListener('change', () => set({ [k]: el.value.trim() }));
+    else el.addEventListener('change', () => set({ [k]: NUMERIC.has(k) ? Number(el.value) : el.value.trim() }));
   });
+  $$('#rgbMode button').forEach(b => b.addEventListener('click', () => set({ rgbMode: b.dataset.v })));
+  $('#rgbProfile').addEventListener('change', e => set({ rgbRestoreProfile: e.target.value }));
   $('#reset').addEventListener('click', async () => { const p = await window.wisp.reset(); P = p; S = p.settings; render(); });
   $('#reveal').addEventListener('click', () => window.wisp.revealData());
 
@@ -227,6 +282,7 @@
   }
   function activate(id, user) {
     if (user) lastUser = Date.now();
+    if (id !== active) sweepAt = performance.now();
     active = id;
     for (const w of wins) {
       const on = w.dataset.id === id;

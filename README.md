@@ -22,9 +22,10 @@ A glowing, colour-changeable aura around the <b>active screen</b> and the <b>act
 WISP sits in your tray and draws light where your attention is:
 
 - **Active window aura** &mdash; a crisp line and soft glow hugging the window you are working in (the real visible edge &mdash; DWM frame bounds on Windows, CoreGraphics on macOS, EWMH frame extents on Linux).
-- **Active screen aura** &mdash; on multi-monitor setups, the display that holds your focus breathes light in from its edges.
+- **Active screen aura** &mdash; the display that holds your focus glows with a slowly turning gradient aurora, brightest on the side where your window is.
 - **The puller** &mdash; switch windows and the aura glides smoothly to the new one while its outline dissolves into a stream of wisps that fly across and re-form it, led by a comet and landing in a burst of sparks.
 - **Wisps** &mdash; motes of light orbit the frame; in *Flow* style two comets chase each other around the edge.
+- **Case RGB sync** &mdash; through [OpenRGB](https://openrgb.org) the whole case follows the aura: fans, RAM, GPU, strips. Pulse breathes, Flow races, and every window switch sends a wisp sweeping through the LEDs.
 - **Click-through, always** &mdash; WISP never takes focus, never eats a click, never shows in Alt-Tab, the taskbar or Mission Control.
 - **Stays out of the way** &mdash; hides over full-screen games, video and presentations (toggle).
 
@@ -62,6 +63,16 @@ Release notes (official Ionity template): [docs/WISP-1.0.0-Release-Notes.docx](d
 Builds are unsigned for now &mdash; Windows: *More info &rarr; Run anyway*; macOS: *right-click &rarr; Open* the first time. Every release carries `SHA256.txt`.
 
 **Portable mode:** the portable `.exe` keeps its settings in a `WISP-data` folder beside itself, so WISP travels with you.
+
+## Case RGB (OpenRGB)
+
+1. Install [OpenRGB](https://openrgb.org) and start its SDK server (Settings &rarr; SDK Server &rarr; Start; FANZi IO-nity does this for you).
+2. WISP &rarr; Settings &rarr; **Case RGB** &rarr; *Sync case RGB*. Pick **Mirror effects** or **Match colour**.
+3. Optional: choose an OpenRGB profile to load when sync stops. `node scripts/probe-openrgb.js` lists what WISP sees without changing any lighting.
+
+## Microsoft Store
+
+See [docs/MICROSOFT-STORE.md](docs/MICROSOFT-STORE.md) &mdash; free company registration, `npm run dist:store`, submit.
 
 ## Use it
 

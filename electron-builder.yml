@@ -52,6 +52,20 @@ nsis:
 portable:
   artifactName: WISP-Portable-${version}-x64.${ext}
 
+# Microsoft Store (MSIX). Build with:  npm run dist:store  (reads WISP_STORE_IDENTITY / WISP_STORE_PUBLISHER)
+# identityName / publisher MUST be replaced with the values Partner Center shows under
+# Product management > Product identity after reserving the name "WISP". The Store
+# signs the package itself - no certificate needed for Store distribution.
+appx:
+  identityName: IonityPtyLtd.WISP                          # overridden by scripts/build-store.js
+  publisher: CN=00000000-0000-0000-0000-000000000000        # overridden by scripts/build-store.js
+  publisherDisplayName: Ionity (Pty) Ltd
+  applicationId: WISP
+  displayName: WISP - Aura Wisp
+  backgroundColor: "#0B0D12"
+  languages: [en-US, en-ZA]
+  artifactName: WISP-Store-${version}-${arch}.${ext}
+
 # -------------------------------------------------------------------- macOS
 mac:
   icon: build/icon.icns

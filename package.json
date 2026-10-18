@@ -2,7 +2,7 @@
   "name": "wisp",
   "desktopName": "wisp.desktop",
   "productName": "WISP",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "WISP - Aura Wisp by Ionity. A living light that follows your focus: a glowing, colour-changeable aura around the active screen and the active window. Windows, macOS and Linux. Tray-controlled, portable or installed.",
   "main": "src/main/main.js",
   "author": {
@@ -33,14 +33,15 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --wisp-debug",
-    "check": "node scripts/syntax-check.js && node scripts/test-geometry.js",
+    "check": "node scripts/syntax-check.js && node scripts/test-geometry.js && node scripts/test-openrgb.js",
     "tracker": "node scripts/test-tracker.js 10",
     "icons": "python3 scripts/make-icons.py",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "dist:store": "node scripts/build-store.js"
   },
   "dependencies": {
     "koffi": "2.16.3"

@@ -52,6 +52,12 @@ const DEFAULTS = Object.freeze({
   hideOnFullscreen: true, // stay out of the way of games and video
   fps: 60,
   launchAtLogin: false,
+  rgbSync: false,         // drive case RGB through the OpenRGB SDK server
+  rgbMode: 'effects',     // 'match' (static aura colour) | 'effects' (mirror style + focus sweeps)
+  rgbBrightness: 100,
+  rgbHost: '127.0.0.1',
+  rgbPort: 6742,
+  rgbRestoreProfile: '',  // OpenRGB profile to load when sync stops ('' = leave the aura colour)
   hotkeyToggle: 'CommandOrControl+Alt+W',
   hotkeyCycle: 'CommandOrControl+Alt+Shift+W',
   firstRun: true
