@@ -1,0 +1,45 @@
+{
+  "name": "wisp",
+  "desktopName": "wisp.desktop",
+  "productName": "WISP",
+  "version": "1.0.0",
+  "description": "WISP - Aura Wisp by Ionity. A living light that follows your focus: a glowing, colour-changeable aura around the active screen and the active window. Windows, macOS and Linux. Tray-controlled, portable or installed.",
+  "main": "src/main/main.js",
+  "author": {
+    "name": "Johan Wilhelm van Antwerp",
+    "email": "ai@ionity.today",
+    "url": "https://www.ionity.today"
+  },
+  "homepage": "https://ionity.digital/#wisp",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ionity-Global-Pty-Ltd/WISP.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Ionity-Global-Pty-Ltd/WISP/issues"
+  },
+  "keywords": ["overlay", "focus", "active-window", "aura", "highlight", "accessibility", "tray", "ionity", "electron"],
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --wisp-debug",
+    "check": "node scripts/syntax-check.js && node scripts/test-geometry.js",
+    "tracker": "node scripts/test-tracker.js 10",
+    "icons": "python3 scripts/make-icons.py",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "koffi": "2.16.3"
+  },
+  "devDependencies": {
+    "electron": "39.8.10",
+    "electron-builder": "^26.0.12"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

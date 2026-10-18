@@ -1,0 +1,225 @@
+# WISP - test, then build Windows, macOS and Linux packages on native runners.
+# Tag a version (v1.2.3) to publish a GitHub Release with every installer + SHA256.txt.
+# Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+name: Build & release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Publish the built packages onto this existing tag (e.g. v1.0.0). Blank = artifacts only.
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: node scripts/syntax-check.js
+      - run: node scripts/test-geometry.js
+
+  # The active-window trackers talk to each OS directly (user32/dwmapi, CoreGraphics
+  # via JXA, libX11). Prove each one loads and reads the desktop on a real runner.
+  tracker:
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Desktop for Linux
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update && sudo apt-get install -y xvfb openbox xterm
+          Xvfb :99 -screen 0 1280x800x24 & sleep 1
+          DISPLAY=:99 openbox & sleep 1
+          DISPLAY=:99 xterm -geometry 80x20+100+100 & sleep 2
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+      - name: Read the active window
+        run: node scripts/test-tracker.js 6 --strict
+
+  # The app must boot, find a tracker and stay up with its overlays.
+  smoke:
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Boot WISP on a virtual desktop
+        run: |
+          sudo apt-get update && sudo apt-get install -y xvfb openbox xterm xcompmgr imagemagick libnss3 libgtk-3-0 libasound2t64
+          Xvfb :99 -screen 0 1400x900x24 +extension Composite & sleep 1
+          export DISPLAY=:99
+          openbox & sleep 1; xcompmgr & sleep 0.5
+          xterm -geometry 90x24+120+110 & sleep 2
+          ./node_modules/electron/dist/electron . --no-sandbox --disable-gpu --hidden --wisp-debug > wisp.log 2>&1 &
+          sleep 15
+          pgrep -f 'electron/dist/electron' > /dev/null || { echo '::error::WISP exited during launch'; cat wisp.log; exit 1; }
+          grep -q "tracker: x11" wisp.log || { echo '::error::X11 tracker did not start'; cat wisp.log; exit 1; }
+          import -window root smoke.png
+          grep '\[wisp\]' wisp.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke
+          path: |
+            smoke.png
+            wisp.log
+          if-no-files-found: warn
+
+  windows:
+    needs: [validate, smoke]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Build installer + portable
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          if ($env:WIN_CSC_LINK) { $env:CSC_LINK = $env:WIN_CSC_LINK; $env:CSC_KEY_PASSWORD = $env:WIN_CSC_KEY_PASSWORD; Write-Host 'signing with repository certificate' }
+          else { Write-Host '::notice::no signing certificate - unsigned build (SmartScreen: More info > Run anyway)' }
+          npx electron-builder --win --publish never
+          if ($LASTEXITCODE -ne 0) { throw "electron-builder exited $LASTEXITCODE" }
+          Get-ChildItem dist -File | Format-Table Name, Length -AutoSize | Out-String | Write-Host
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WISP-windows
+          path: dist/*.exe
+          if-no-files-found: error
+
+  macos:
+    needs: [validate, smoke]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Build dmg + zip (Apple Silicon and Intel)
+        shell: bash
+        env:
+          MAC_CERT_P12_BASE64: ${{ secrets.MAC_CERT_P12_BASE64 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+        run: |
+          if [ -n "$MAC_CERT_P12_BASE64" ]; then export CSC_LINK="$MAC_CERT_P12_BASE64" CSC_KEY_PASSWORD="$MAC_CERT_PASSWORD";
+          else export CSC_IDENTITY_AUTO_DISCOVERY=false; echo "::notice::unsigned macOS build - right-click > Open the first time"; fi
+          ver=$(node -p "require('./package.json').version")
+          set +e
+          build_arch() {
+            arch=$1; dmg=$2; zip=$3
+            for attempt in 1 2 3; do
+              hdiutil info | awk '/\/Volumes\/WISP/ {print $1}' | xargs -I{} hdiutil detach -force {} 2>/dev/null
+              npx electron-builder --mac dmg zip --$arch --publish never
+              if [ -f "dist/$dmg" ] && [ -f "dist/$zip" ]; then return 0; fi
+              echo "::warning::$arch attempt $attempt incomplete - retrying"; sleep 10
+            done
+            return 1
+          }
+          ok=0
+          build_arch arm64 "WISP-$ver-arm64.dmg" "WISP-$ver-arm64-mac.zip" || ok=1
+          build_arch x64   "WISP-$ver-x64.dmg"   "WISP-$ver-mac.zip"       || ok=1
+          ls -la dist/
+          exit $ok
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WISP-macos
+          path: |
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: error
+
+  linux:
+    needs: [validate, smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Packaging tools
+        run: sudo apt-get update && sudo apt-get install -y rpm fakeroot dpkg
+      - run: npx electron-builder --linux --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WISP-linux
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.rpm
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.release_tag != ''
+    needs: [windows, macos, linux]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: WISP-*
+          merge-multiple: true
+      - name: Checksums
+        run: |
+          cd artifacts
+          sha256sum * > SHA256.txt
+          cat SHA256.txt
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag || github.ref_name }}
+          name: WISP ${{ inputs.release_tag || github.ref_name }} - Aura Wisp
+          files: artifacts/*
+          draft: false
+          generate_release_notes: true
+          body: |
+            **WISP - Aura Wisp by Ionity.** A living light that follows your focus: a glowing,
+            colour-changeable aura around the active window and the active screen, controlled from the tray.
+
+            | Platform | Download |
+            | --- | --- |
+            | Windows 10/11 (installer) | `WISP-Setup-*-x64.exe` (ARM64: `WISP-Setup-*-arm64.exe`) |
+            | Windows (portable, no install) | `WISP-Portable-*-x64.exe` |
+            | macOS Apple Silicon | `WISP-*-arm64.dmg` |
+            | macOS Intel | `WISP-*-x64.dmg` |
+            | Linux (any distro) | `WISP-*-x86_64.AppImage` |
+            | Debian / Ubuntu | `wisp_*_amd64.deb` |
+            | Fedora / RHEL / openSUSE | `wisp-*.x86_64.rpm` |
+
+            **Highlights** - 12 colours (Ionity Blue, Cyan, Teal, Purple, Global Orange, Emerald, Crimson, Rose,
+            Gold, Moonlight, Ionity Flow brand gradient, Spectrum) plus any custom colour - four styles (Aura,
+            Pulse, Flow, Wire) - active-screen edge aura - wisps orbiting the frame - the puller: the aura glides
+            and a comet flies when you switch windows - hides over full-screen games and video - hotkeys
+            Ctrl+Alt+W (pause) and Ctrl+Alt+Shift+W (next colour) - start with your computer - portable mode keeps
+            its settings beside the .exe. Click-through: it never takes focus or a mouse click.
+
+            Unsigned for now - Windows: *More info > Run anyway* - macOS: *right-click > Open*. Verify with SHA256.txt.
+            Linux needs X11 or XWayland for the window aura; on pure Wayland the screen aura follows the pointer.
+
+            Download page: https://ionity.digital/#wisp
+
+            ---
+            Governance: Policy 986 AED - License AED 900 / CC BY-NC-SA 4.0 where stated
+            (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM2 - Author: Johan Wilhelm van Antwerp - https://www.ionity.today

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WISP - Settings</title>
+<link rel="stylesheet" href="settings.css">
+</head>
+<body>
+<!-- WISP - Aura Wisp | Ionity (Pty) Ltd | AEDI | Policy 986 AED | (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - TM2 -->
+<header class="top">
+  <div class="brand">
+    <img class="app-ico" src="../../build/icon.png" alt="" width="40" height="40">
+    <div>
+      <h1>WISP <span class="ver" id="ver">1.0.0</span></h1>
+      <p class="tag">Aura Wisp &mdash; a living light that follows your focus</p>
+    </div>
+  </div>
+  <div class="top-right">
+    <label class="master" title="Ctrl+Alt+W">
+      <input type="checkbox" id="enabled"><span class="sw"></span><span class="lbl" id="enabledLbl">On</span>
+    </label>
+    <a class="ionity" href="https://www.ionity.today" target="_blank" rel="noopener" title="Ionity (Pty) Ltd"><img src="../../assets/ionity-official.png" alt="IONITY" height="18"></a>
+  </div>
+</header>
+
+<main>
+  <section id="welcome" class="hero">
+    <div class="stage" id="stage" aria-label="Live preview">
+      <div class="stage-screen" id="stageScreen"></div>
+      <div class="mock w1" id="mock1"><i></i><i></i><i></i><b></b><b></b><b class="s"></b></div>
+      <div class="mock w2" id="mock2"><i></i><i></i><i></i><b></b><b class="s"></b><b></b><b></b></div>
+      <div class="mock w3" id="mock3"><i></i><i></i><i></i><b class="s"></b><b></b></div>
+      <div class="p-frame" id="pFrame"><div class="p-glow"></div><div class="p-line"></div><div class="p-flow"></div></div>
+      <div class="stage-bar"><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div class="hero-copy">
+      <h2>Your focus, glowing.</h2>
+      <p>WISP wraps the window you are working in with a soft aura, lights the edges of the active screen, and pulls the light across whenever you switch. Everything here applies live.</p>
+      <ul class="keys">
+        <li><kbd id="k1">Ctrl+Alt+W</kbd> pause / resume</li>
+        <li><kbd id="k2">Ctrl+Alt+Shift+W</kbd> next colour</li>
+        <li>Tray icon &rarr; every setting, anytime</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="colour" class="card">
+    <h3>Colour</h3>
+    <div class="swatches" id="swatches"></div>
+    <div class="custom">
+      <label class="picker"><input type="color" id="picker" value="#3366ff"><span>Custom</span></label>
+      <input type="text" id="hex" maxlength="7" spellcheck="false" aria-label="Hex colour">
+      <span class="hint">Pick any colour &mdash; the tray icon follows it.</span>
+    </div>
+  </section>
+
+  <section id="style" class="card">
+    <h3>Style</h3>
+    <div class="seg" id="styles"></div>
+  </section>
+
+  <section id="layers" class="card two">
+    <div>
+      <h3>Layers</h3>
+      <label class="row"><span><b>Active window aura</b><small>The glowing frame around the focused window</small></span><input type="checkbox" data-k="windowAura"><span class="sw"></span></label>
+      <label class="row"><span><b>Active screen aura</b><small>Light breathing in from the edges of the active display</small></span><input type="checkbox" data-k="screenAura"><span class="sw"></span></label>
+      <label class="row"><span><b>Wisps</b><small>Motes of light orbiting the frame</small></span><input type="checkbox" data-k="wisps"><span class="sw"></span></label>
+      <label class="row"><span><b>Puller</b><small>The aura glides and a comet flies when you switch windows</small></span><input type="checkbox" data-k="puller"><span class="sw"></span></label>
+    </div>
+    <div>
+      <h3>Shape &amp; light</h3>
+      <label class="slider"><span>Thickness <output data-o="thickness"></output></span><input type="range" min="1" max="16" step="1" data-k="thickness"></label>
+      <label class="slider"><span>Glow <output data-o="glow"></output></span><input type="range" min="0" max="100" step="1" data-k="glow"></label>
+      <label class="slider"><span>Intensity <output data-o="intensity"></output></span><input type="range" min="5" max="100" step="1" data-k="intensity"></label>
+      <label class="slider"><span>Screen aura <output data-o="screenIntensity"></output></span><input type="range" min="0" max="100" step="1" data-k="screenIntensity"></label>
+      <label class="slider"><span>Speed <output data-o="speed"></output></span><input type="range" min="0" max="100" step="1" data-k="speed"></label>
+      <label class="slider"><span>Gap from window <output data-o="padding"></output></span><input type="range" min="-8" max="24" step="1" data-k="padding"></label>
+      <label class="slider"><span>Corner radius <output data-o="radius"></output></span><input type="range" min="-1" max="40" step="1" data-k="radius"></label>
+    </div>
+  </section>
+
+  <section id="behaviour" class="card two">
+    <div>
+      <h3>Behaviour</h3>
+      <label class="row"><span><b>Hide over full-screen apps</b><small>Games, video and presentations stay clean</small></span><input type="checkbox" data-k="hideOnFullscreen"><span class="sw"></span></label>
+      <label class="row"><span><b>Start with my computer</b><small>WISP waits quietly in the tray</small></span><input type="checkbox" data-k="launchAtLogin"><span class="sw"></span></label>
+      <label class="slider"><span>Frame rate cap <output data-o="fps"></output></span><input type="range" min="15" max="144" step="1" data-k="fps"></label>
+    </div>
+    <div>
+      <h3>Hotkeys</h3>
+      <label class="field"><span>Pause / resume</span><input type="text" data-k="hotkeyToggle" spellcheck="false"></label>
+      <label class="field"><span>Next colour</span><input type="text" data-k="hotkeyCycle" spellcheck="false"></label>
+      <p class="hint">Electron accelerator format, e.g. <code>CommandOrControl+Alt+W</code>. Leave empty to disable.</p>
+      <div class="actions">
+        <button id="reset" class="ghost">Reset to defaults</button>
+        <button id="reveal" class="ghost">Show settings file</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" class="card about">
+    <img src="../../build/icon.png" alt="" width="72" height="72">
+    <div>
+      <h3>About WISP</h3>
+      <p><b>WISP &mdash; Aura Wisp</b> <span id="aboutVer"></span> &middot; <span id="aboutPlat"></span></p>
+      <p>Created by <b>Johan Wilhelm van Antwerp</b> &middot; Ionity (Pty) Ltd &mdash; formerly Antwerp Designs &middot; AEDI<br>
+      <i>Building Tomorrow, Today.</i> &middot; Anything is Possible with God.</p>
+      <p class="links">
+        <a href="https://ionity.digital/#wisp" target="_blank">ionity.digital</a>
+        <a href="https://www.ionity.today" target="_blank">ionity.today</a>
+        <a href="https://www.ionity.co.za" target="_blank">ionity.co.za</a>
+        <a href="https://github.com/Ionity-Global-Pty-Ltd/WISP" target="_blank">GitHub</a>
+        <a href="https://github.com/Ionity-Global-Pty-Ltd/WISP/issues" target="_blank">Report an issue</a>
+      </p>
+      <p class="fine">Governance: Policy 986 AED &middot; License: CC BY-NC-SA 4.0 under Policy 986 AED (commercial use: AED 900 licence, ai@ionity.today)<br>
+      &copy; 2018&ndash;2026 Antwerp Designs | Ionity (Pty) Ltd &mdash; All Rights Reserved &mdash; TM2</p>
+    </div>
+  </section>
+</main>
+<script src="settings.js"></script>
+</body>
+</html>

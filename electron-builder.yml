@@ -1,0 +1,116 @@
+# WISP packaging - Windows (installer + portable), macOS (dmg + zip), Linux (AppImage, deb, rpm)
+# Antwerp Designs | Ionity (Pty) Ltd | AEDI - Policy 986 AED
+appId: com.ionity.wisp
+productName: WISP
+copyright: (c) 2018-2026 Antwerp Designs | Ionity (Pty) Ltd - All rights reserved - TM2
+
+directories:
+  buildResources: build
+  output: dist
+
+files:
+  - src/**/*
+  - assets/**/*
+  - build/icon.png
+  - package.json
+  - LICENSE
+  - "!**/*.map"
+  - "!**/node_modules/koffi/src/**"
+  - "!**/node_modules/koffi/doc/**"
+  - "!**/node_modules/koffi/vendor/**"
+
+asarUnpack:
+  - "**/node_modules/koffi/**/*.node"
+
+npmRebuild: false   # koffi ships prebuilt N-API binaries for every OS/arch
+
+# ------------------------------------------------------------------ Windows
+win:
+  icon: build/icon.ico
+  files:
+    - "!**/node_modules/koffi/build/koffi/{darwin,linux,freebsd,openbsd,musl}_*/**"
+    - "!**/node_modules/koffi/build/koffi/win32_ia32/**"
+  requestedExecutionLevel: asInvoker
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+    - target: portable
+      arch: [x64]
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: WISP
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  runAfterFinish: true
+  artifactName: WISP-Setup-${version}-${arch}.${ext}
+
+portable:
+  artifactName: WISP-Portable-${version}-x64.${ext}
+
+# -------------------------------------------------------------------- macOS
+mac:
+  icon: build/icon.icns
+  files:
+    - "!**/node_modules/koffi/build/koffi/{win32,linux,freebsd,openbsd,musl}_*/**"
+  category: public.app-category.utilities
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    LSUIElement: true          # tray-only: no Dock icon
+    NSAppleEventsUsageDescription: WISP reads the position of the front window to draw its aura.
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+
+dmg:
+  title: WISP
+  artifactName: WISP-${version}-${arch}.${ext}
+  contents:
+    - x: 140
+      y: 200
+      type: file
+    - x: 400
+      y: 200
+      type: link
+      path: /Applications
+
+# -------------------------------------------------------------------- Linux
+linux:
+  icon: build/icons
+  category: Utility
+  synopsis: Aura Wisp - glowing aura around the active window and screen
+  description: WISP draws a colour-changeable aura around the active window and the active screen, with a tray menu for colour, style and layers. By Ionity (Pty) Ltd.
+  maintainer: Johan Wilhelm van Antwerp <ai@ionity.today>
+  vendor: Ionity (Pty) Ltd
+  executableName: wisp
+  files:
+    - "!**/node_modules/koffi/build/koffi/{win32,darwin,freebsd,openbsd,musl}_*/**"
+    - "!**/node_modules/koffi/build/koffi/linux_{ia32,loong64,riscv64d,armhf}/**"
+  desktop:
+    entry:
+      StartupWMClass: WISP
+  target:
+    - target: AppImage
+      arch: [x64]
+    - target: deb
+      arch: [x64]
+    - target: rpm
+      arch: [x64]
+
+appImage:
+  artifactName: WISP-${version}-x86_64.${ext}
+deb:
+  artifactName: wisp_${version}_amd64.${ext}
+  depends: [libx11-6, libnss3, libgtk-3-0]
+rpm:
+  artifactName: wisp-${version}.x86_64.${ext}
