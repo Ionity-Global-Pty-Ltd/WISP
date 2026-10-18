@@ -49,11 +49,13 @@ Grab the latest from **[Releases](https://github.com/Ionity-Global-Pty-Ltd/WISP/
 
 | Platform | File |
 | --- | --- |
-| Windows 10 / 11 &mdash; installer | `WISP-Setup-<ver>-x64.exe` &middot; `WISP-Setup-<ver>-arm64.exe` |
+| Windows 10 / 11 &mdash; installer | `WISP-Setup-<ver>-x64.exe` &middot; `WISP-Setup-<ver>-arm64.exe` &middot; `WISP-Setup-<ver>.exe` (both, auto-detects) |
 | Windows &mdash; **portable** (no install, runs from USB) | `WISP-Portable-<ver>-x64.exe` |
 | macOS Apple Silicon / Intel | `WISP-<ver>-arm64.dmg` / `WISP-<ver>-x64.dmg` |
 | Linux (any distro) | `WISP-<ver>-x86_64.AppImage` |
 | Debian / Ubuntu &middot; Fedora / RHEL | `wisp_<ver>_amd64.deb` &middot; `wisp-<ver>.x86_64.rpm` |
+
+Release notes (official Ionity template): [docs/WISP-1.0.0-Release-Notes.docx](docs/WISP-1.0.0-Release-Notes.docx).
 
 Builds are unsigned for now &mdash; Windows: *More info &rarr; Run anyway*; macOS: *right-click &rarr; Open* the first time. Every release carries `SHA256.txt`.
 
