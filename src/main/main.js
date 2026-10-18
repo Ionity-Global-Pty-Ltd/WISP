@@ -94,6 +94,34 @@ function tick() {
     if (k !== lastLogged) { lastLogged = k; log('active', info.kind, info.id || '', JSON.stringify(state.rect), info.title || info.app || ''); }
   }
   overlays.push(state);
+  pushLive(info, state);
+}
+
+// live status for the settings window: which window / display has focus right now
+let lastLive = '', lastLiveAt = 0;
+function pushLive(info, state) {
+  if (!settingsWin || settingsWin.isDestroyed() || !settingsWin.isVisible()) return;
+  const now = Date.now();
+  if (now - lastLiveAt < 200) return;
+  const msg = {
+    kind: info ? info.kind : 'none',
+    rect: info && info.kind === 'window' ? info.rect : null,
+    label: info ? (info.title || info.app || '') : '',
+    activeDisplayId: state.activeDisplayId,
+    visible: state.visible
+  };
+  const key = JSON.stringify(msg);
+  if (key === lastLive) return;
+  lastLive = key; lastLiveAt = now;
+  settingsWin.webContents.send('wisp:live', msg);
+}
+
+function displaysPayload() {
+  const primary = screen.getPrimaryDisplay().id;
+  return screen.getAllDisplays().map((d, i) => ({
+    id: d.id, index: i + 1, bounds: d.bounds, scaleFactor: d.scaleFactor,
+    primary: d.id === primary, label: d.label || ''
+  }));
 }
 
 function startEngine() {
@@ -266,8 +294,11 @@ function openSettings(section) {
     settingsWin.show(); settingsWin.focus();
     return;
   }
-  settingsWin = new BrowserWindow({
-    width: 900, height: 720, minWidth: 720, minHeight: 560,
+  const chrome = process.platform === 'darwin'
+    ? { titleBarStyle: 'hiddenInset', trafficLightPosition: { x: 18, y: 18 } }
+    : { titleBarStyle: 'hidden', titleBarOverlay: { color: '#0B0D12', symbolColor: '#C9D0DD', height: 46 } };
+  settingsWin = new BrowserWindow(Object.assign({
+    width: 1240, height: 820, minWidth: 980, minHeight: 640,
     show: false,
     title: 'WISP - Settings',
     backgroundColor: '#0B0D12',
@@ -277,7 +308,7 @@ function openSettings(section) {
       preload: path.join(__dirname, '..', 'settings', 'preload.js'),
       contextIsolation: true, nodeIntegration: false, sandbox: true
     }
-  });
+  }, chrome));
   settingsWin.removeMenu();
   settingsWin.loadFile(path.join(__dirname, '..', 'settings', 'settings.html'), { hash: section || '' });
   settingsWin.once('ready-to-show', () => { settingsWin.show(); if (process.platform === 'darwin') app.focus({ steal: true }); });
@@ -301,12 +332,21 @@ function settingsPayload() {
     tracker: tracker ? tracker.name : 'none',
     electron: process.versions.electron,
     dataFile: settings.file,
+    displays: displaysPayload(),
+    trayIcon: trayIconData(),
     portable: !!process.env.PORTABLE_EXECUTABLE_DIR
   };
 }
 
 function broadcastToSettings() {
   if (settingsWin && !settingsWin.isDestroyed()) settingsWin.webContents.send('wisp:settings', settingsPayload());
+}
+
+function trayIconData() {
+  const s = settings.data;
+  const p = presetById(s.presetId);
+  try { return trayImage({ color: s.color, special: p && p.special, enabled: s.enabled }).toDataURL({ scaleFactor: 2 }); }
+  catch (_) { return ''; }
 }
 
 ipcMain.handle('wisp:get', () => settingsPayload());
@@ -358,7 +398,7 @@ app.whenReady().then(() => {
   settings.onChange(applySettings);
 
   let rebuildT = null;
-  const rebuildSoon = () => { clearTimeout(rebuildT); rebuildT = setTimeout(() => overlays.rebuild(), 400); };
+  const rebuildSoon = () => { clearTimeout(rebuildT); rebuildT = setTimeout(() => { overlays.rebuild(); broadcastToSettings(); }, 400); };
   screen.on('display-added', rebuildSoon);
   screen.on('display-removed', rebuildSoon);
   screen.on('display-metrics-changed', rebuildSoon);

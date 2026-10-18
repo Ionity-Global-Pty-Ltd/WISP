@@ -23,7 +23,7 @@ WISP sits in your tray and draws light where your attention is:
 
 - **Active window aura** &mdash; a crisp line and soft glow hugging the window you are working in (the real visible edge &mdash; DWM frame bounds on Windows, CoreGraphics on macOS, EWMH frame extents on Linux).
 - **Active screen aura** &mdash; on multi-monitor setups, the display that holds your focus breathes light in from its edges.
-- **The puller** &mdash; switch windows and the aura glides to the new one on a spring while a wisp-comet flies across, landing in a burst of sparks.
+- **The puller** &mdash; switch windows and the aura glides smoothly to the new one while its outline dissolves into a stream of wisps that fly across and re-form it, led by a comet and landing in a burst of sparks.
 - **Wisps** &mdash; motes of light orbit the frame; in *Flow* style two comets chase each other around the edge.
 - **Click-through, always** &mdash; WISP never takes focus, never eats a click, never shows in Alt-Tab, the taskbar or Mission Control.
 - **Stays out of the way** &mdash; hides over full-screen games, video and presentations (toggle).
@@ -34,6 +34,8 @@ WISP sits in your tray and draws light where your attention is:
 | **Flow** in Ionity Blue | **Ionity Flow** &mdash; the brand gradient |
 | ![Pulse](docs/screenshots/wisp-pulse-orange.jpg) | ![Settings](docs/screenshots/wisp-settings.jpg) |
 | **Pulse** in Global Orange | Settings &mdash; everything applies live |
+| ![Wisp swarm](docs/screenshots/wisp-swarm.jpg) | |
+| **1.1:** switching windows &mdash; the outline dissolves into wisps that stream across and re-form | |
 
 ## Colours & styles
 
@@ -97,8 +99,8 @@ Icons are generated with `python3 scripts/make-icons.py` (Pillow). CI (`.github/
 ```
 src/main/        main process: tray, settings store, overlay windows, engine
 src/main/trackers/  win32.js (user32/dwmapi) · darwin.js (JXA/CoreGraphics) · linux.js (libX11) · cursor.js (fallback)
-src/overlay/     per-display click-through renderer (CSS frame + canvas wisps)
-src/settings/    settings window
+src/overlay/     aura.js engine (CSS frame + canvas wisps) shared by the click-through overlays and the settings preview
+src/settings/    settings app with a realistic live-preview desktop
 scripts/         icons, tests, tracker diagnostics
 ```
 

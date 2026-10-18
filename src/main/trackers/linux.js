@@ -48,8 +48,17 @@ function create({ screen, log }) {
     maxH: atom('_NET_WM_STATE_MAXIMIZED_HORZ'),
     type: atom('_NET_WM_WINDOW_TYPE'),
     typeDesktop: atom('_NET_WM_WINDOW_TYPE_DESKTOP'),
-    typeDock: atom('_NET_WM_WINDOW_TYPE_DOCK')
+    typeDock: atom('_NET_WM_WINDOW_TYPE_DOCK'),
+    name: atom('_NET_WM_NAME')
   };
+
+  function propText(win, a) {
+    const at = [0], af = [0], n = [0], after = [0], data = [null];
+    const st = XGetWindowProperty(dpy, win, a, 0, 256, 0, 0, at, af, n, after, data);
+    if (st !== 0 || !data[0]) return '';
+    try { return af[0] === 8 && n[0] > 0 ? Buffer.from(koffi.decode(data[0], 'uint8_t', n[0])).toString('utf8') : ''; }
+    finally { XFree(data[0]); }
+  }
 
   function prop32(win, a, max = 32) {
     const at = [0], af = [0], n = [0], after = [0], data = [null];
@@ -95,6 +104,7 @@ function create({ screen, log }) {
       kind: 'window', id,
       pid: pid ? pid[0] : 0,
       rect: { x: Math.round(x / sf), y: Math.round(y / sf), width: Math.round(width / sf), height: Math.round(height / sf) },
+      title: propText(win, A.name),
       maximized: state.includes(A.maxV) && state.includes(A.maxH),
       fullscreen: state.includes(A.fullscreen)
     };

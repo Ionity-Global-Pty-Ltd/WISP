@@ -1,5 +1,5 @@
-/* WISP - aura overlay styles | Ionity (Pty) Ltd | Policy 986 AED */
-:root {
+/* WISP - aura styles (overlay + live preview) | Ionity (Pty) Ltd | Policy 986 AED */
+.wisp-host {
   --c: #3366FF;          /* aura colour */
   --c2: #3366FF;         /* second colour (gradient mode) */
   --line-bg: var(--c);
@@ -11,15 +11,10 @@
   --sg: 70px;            /* screen aura depth */
   --breath: 2.6s;
 }
-html, body {
-  margin: 0; padding: 0; width: 100%; height: 100%;
-  overflow: hidden; background: transparent !important;
-  pointer-events: none; user-select: none;
-}
-
 /* ---------- active screen: a soft light breathing in from the display edges */
-#screen {
-  position: fixed; inset: 0;
+.wisp-host .wisp-screen {
+  pointer-events: none;
+  position: absolute; inset: 0;
   opacity: 0;
   transition: opacity .7s cubic-bezier(.2,.7,.2,1);
   box-shadow:
@@ -27,37 +22,38 @@ html, body {
     inset 0 0 calc(var(--sg) * .28) 0 color-mix(in srgb, var(--c2) 70%, transparent);
   will-change: opacity;
 }
-#screen.on { opacity: var(--si); }
-body.pulse #screen.on { animation: screenBreath calc(var(--breath) * 1.6) ease-in-out infinite; }
+.wisp-host .wisp-screen.on { opacity: var(--si); }
+.wisp-host.pulse .wisp-screen.on { animation: screenBreath calc(var(--breath) * 1.6) ease-in-out infinite; }
 @keyframes screenBreath {
   0%, 100% { opacity: calc(var(--si) * .55); }
   50%      { opacity: var(--si); }
 }
 
 /* ---------- active window frame */
-#frame {
-  position: fixed; left: 0; top: 0; width: 0; height: 0;
+.wisp-host .wisp-frame {
+  pointer-events: none;
+  position: absolute; left: 0; top: 0; width: 0; height: 0;
   opacity: 0;
   will-change: opacity;
 }
-#frame .glow, #frame .line {
+.wisp-host .wisp-frame .glow, .wisp-host .wisp-frame .line {
   position: absolute; inset: 0;
   border-radius: var(--r);
 }
-#frame .glow {
+.wisp-host .wisp-frame .glow {
   box-shadow:
     0 0 calc(var(--g) * .55) calc(var(--g) * .06) color-mix(in srgb, var(--c) 92%, transparent),
     0 0 var(--g) calc(var(--g) * .18) color-mix(in srgb, var(--c2) 55%, transparent),
     inset 0 0 calc(var(--g) * .45) 0 color-mix(in srgb, var(--c) 45%, transparent);
   opacity: var(--i);
 }
-#frame .glow.outer {
+.wisp-host .wisp-frame .glow.outer {
   inset: calc(var(--g) * -.15);
   border-radius: calc(var(--r) + var(--g) * .15);
   box-shadow: 0 0 calc(var(--g) * 1.6) calc(var(--g) * .25) color-mix(in srgb, var(--c) 30%, transparent);
   opacity: calc(var(--i) * .8);
 }
-#frame .line {
+.wisp-host .wisp-frame .line {
   padding: var(--t);
   background: var(--line-bg);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -67,17 +63,18 @@ body.pulse #screen.on { animation: screenBreath calc(var(--breath) * 1.6) ease-i
 }
 
 /* styles */
-body.wire #frame .glow { display: none; }
-body.flow #frame .glow { opacity: calc(var(--i) * .75); }
-body.pulse #frame .glow { animation: breath var(--breath) ease-in-out infinite; }
-body.pulse #frame .glow.outer { animation: breathOuter var(--breath) ease-in-out infinite; }
+.wisp-host.wire .wisp-frame .glow { display: none; }
+ .wisp-frame .glow { display: none; }
+.wisp-host.flow .wisp-frame .glow { opacity: calc(var(--i) * .75); }
+.wisp-host.pulse .wisp-frame .glow { animation: breath var(--breath) ease-in-out infinite; }
+.wisp-host.pulse .wisp-frame .glow.outer { animation: breathOuter var(--breath) ease-in-out infinite; }
 @keyframes breath      { 0%,100% { opacity: calc(var(--i) * .35); } 50% { opacity: var(--i); } }
 @keyframes breathOuter { 0%,100% { opacity: 0; } 50% { opacity: calc(var(--i) * .9); } }
 
-body.square #frame .glow, body.square #frame .line { border-radius: 0; }
+.wisp-host.square .wisp-frame .glow, .wisp-host.square .wisp-frame .line { border-radius: 0; }
 
-#fx { position: fixed; inset: 0; width: 100%; height: 100%; }
+.wisp-host .wisp-fx { pointer-events: none; position: absolute; inset: 0; width: 100%; height: 100%; }
 
 @media (prefers-reduced-motion: reduce) {
-  body.pulse #frame .glow, body.pulse #frame .glow.outer, body.pulse #screen.on { animation: none; }
+  .wisp-host.pulse .wisp-frame .glow, .wisp-host.pulse .wisp-frame .glow.outer, .wisp-host.pulse .wisp-screen.on { animation: none; }
 }
