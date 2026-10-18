@@ -62,14 +62,14 @@
       color-mix(in srgb, var(--c3) 50%, var(--c2)) 140deg, var(--c2) 185deg,
       color-mix(in srgb, var(--c2) 50%, var(--c4)) 230deg, var(--c4) 270deg,
       color-mix(in srgb, var(--c4) 50%, var(--c)) 315deg, var(--c) 360deg);
-  opacity: .95;
+  opacity: .8;
   will-change: transform;
 }
 .wisp-host .wisp-screen.on .sa-aurora { animation: auroraSpin var(--aurora) linear infinite; }
 @keyframes auroraSpin { to { transform: rotate(360deg); } }
 .wisp-screen .sa-focus {
   position: absolute; inset: 0;
-  background: radial-gradient(ellipse 60% 70% at var(--fx) var(--fy), rgba(255,255,255,.42), color-mix(in srgb, var(--c) 65%, white 35%) 28%, transparent 75%);
+  background: radial-gradient(ellipse 60% 70% at var(--fx) var(--fy), rgba(255,255,255,.22), color-mix(in srgb, var(--c) 55%, transparent) 30%, transparent 75%);
   mix-blend-mode: screen;
 }
 .wisp-screen .sa-corners { display: none; }   /* folded into the vignette */
@@ -101,8 +101,8 @@
 .wisp-host .wisp-frame .glow.outer {
   inset: calc(var(--g) * -.15);
   border-radius: calc(var(--r) + var(--g) * .15);
-  box-shadow: 0 0 calc(var(--g) * 1.6) calc(var(--g) * .25) color-mix(in srgb, var(--c) 30%, transparent);
-  opacity: calc(var(--i) * .8);
+  box-shadow: 0 0 calc(var(--g) * 1.6) calc(var(--g) * .25) color-mix(in srgb, var(--c) 22%, transparent);
+  opacity: calc(var(--i) * .65);
 }
 .wisp-host .wisp-frame .line {
   padding: var(--t);

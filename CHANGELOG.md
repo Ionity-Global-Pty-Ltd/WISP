@@ -2,6 +2,10 @@
 
 Ionity (Pty) Ltd | AEDI | Policy 986 AED
 
+## 1.2.2 - 2026-10-18
+
+- **More transparent, lighter aura.** The active-screen glow is about half as opaque at the default setting (~0.34), sits in a shallower band along the bezel, and its focus bloom is softer; the window halo is more see-through. Slide *Screen aura* / *Intensity* up for the old strength.
+
 ## 1.2.1 - 2026-10-18
 
 - **Realistic screen borders.** The active-screen light now falls off from the bezel like real ambient light: a feathered, gaussian-blurred rounded frame (two passes for a soft tail) replaces the hard edge band - no straight lines, no corner seams, no hairline rim. The aurora colours blend through intermediate tones, and a faint dither prevents gradient banding.

@@ -162,9 +162,9 @@ function create(opts) {
     root.setProperty('--t', S.thickness + 'px');
     root.setProperty('--g', glowPx() + 'px');
     root.setProperty('--i', (S.intensity / 100).toFixed(3));
-    root.setProperty('--si', Math.min(1, 0.18 + S.screenIntensity / 100 * 0.95).toFixed(3));
+    root.setProperty('--si', Math.min(0.85, 0.06 + S.screenIntensity / 100 * 0.62).toFixed(3));   // airy: ~0.34 at the default 45
     root.setProperty('--sg', (30 + S.screenIntensity * 1.1) + 'px');
-    root.setProperty('--bw', Math.round(30 + S.screenIntensity * 1.1) + 'px');
+    root.setProperty('--bw', Math.round(24 + S.screenIntensity * 0.9) + 'px');
     root.setProperty('--aurora', (42 / speedK()).toFixed(1) + 's');
     paintScreenMask();
     root.setProperty('--breath', (3.6 / speedK()).toFixed(2) + 's');
