@@ -35,6 +35,13 @@ function sanitize(raw) {
   s.launchAtLogin = !!s.launchAtLogin;
   s.firstRun = !!s.firstRun;
   s.rgbSync = !!s.rgbSync;
+  s.ssEnabled = !!s.ssEnabled;
+  s.ssClock = !!s.ssClock;
+  s.ssRespectMedia = !!s.ssRespectMedia;
+  s.ssIdleMinutes = Math.round(clamp(s.ssIdleMinutes, 1, 120, DEFAULTS.ssIdleMinutes));
+  s.ssFps = Math.round(clamp(s.ssFps, 15, 60, DEFAULTS.ssFps));
+  if (s.ssScene !== 'auto') s.ssScene = String(Math.round(clamp(s.ssScene, 0, 4, 1)));
+  if (s.ssDismiss !== 'click' && s.ssDismiss !== 'move') s.ssDismiss = 'click';
   if (s.rgbMode !== 'match' && s.rgbMode !== 'effects') s.rgbMode = 'effects';
   s.rgbBrightness = clamp(s.rgbBrightness, 0, 100, DEFAULTS.rgbBrightness);
   if (typeof s.rgbRestoreProfile !== 'string') s.rgbRestoreProfile = '';

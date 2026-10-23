@@ -2,6 +2,13 @@
 
 Ionity (Pty) Ltd | AEDI | Policy 986 AED
 
+## 1.3.0 - 2026-10-23
+
+- **Screensaver.** After 1 minute idle (adjustable 1-60 min) the Ionity fluid backdrop pops up across every screen, one display after the other, each in its own scene: Forge Obsidian, IONITY Cobalt Plasma, Aether Singularity, Bioluminescent Abyss, Kintsugi Gold - or one scene everywhere. Moving the mouse stirs the fluid, a click or any key returns, keys 1-5 change scenes. Clock and date in the corner, IONITY mark, rendered at half resolution and 30 fps to stay cool.
+- Never starts over full-screen apps, while a video, call or music is playing (Windows: Core Audio peak meter; macOS: display-sleep power assertions) or when the session is locked. It is a screensaver, not a lock.
+- Built on the Ionity Interactive Fluid Backdrop; the Bioluminescent Abyss scene was retuned to deep-sea navy and teal (the original palette rendered red/green).
+- New **Screensaver** settings page (scene cards, preview, dismiss mode, clock, media guard, frame rate) and tray items *Screensaver* / *Start screensaver now*. The window aura steps aside while it runs.
+
 ## 1.2.2 - 2026-10-18
 
 - **More transparent, lighter aura.** The active-screen glow is about half as opaque at the default setting (~0.34), sits in a shallower band along the bezel, and its focus bloom is softer; the window halo is more see-through. Slide *Screen aura* / *Intensity* up for the old strength.

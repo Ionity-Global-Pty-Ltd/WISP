@@ -26,6 +26,7 @@ WISP sits in your tray and draws light where your attention is:
 - **The puller** &mdash; switch windows and the aura glides smoothly to the new one while its outline dissolves into a stream of wisps that fly across and re-form it, led by a comet and landing in a burst of sparks.
 - **Wisps** &mdash; motes of light orbit the frame; in *Flow* style two comets chase each other around the edge.
 - **Case RGB sync** &mdash; through [OpenRGB](https://openrgb.org) the whole case follows the aura: fans, RAM, GPU, strips. Pulse breathes, Flow races, and every window switch sends a wisp sweeping through the LEDs.
+- **Screensaver** &mdash; after a minute away, the Ionity fluid backdrop pops up across every screen, a different scene on each; the mouse stirs it, a click or key brings you back.
 - **Click-through, always** &mdash; WISP never takes focus, never eats a click, never shows in Alt-Tab, the taskbar or Mission Control.
 - **Stays out of the way** &mdash; hides over full-screen games, video and presentations (toggle).
 

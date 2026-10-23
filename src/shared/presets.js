@@ -57,7 +57,14 @@ const DEFAULTS = Object.freeze({
   rgbBrightness: 100,
   rgbHost: '127.0.0.1',
   rgbPort: 6742,
-  rgbRestoreProfile: '',  // OpenRGB profile to load when sync stops ('' = leave the aura colour)
+  rgbRestoreProfile: '',
+  ssEnabled: true,        // screensaver: the Ionity fluid backdrop across every screen
+  ssIdleMinutes: 1,       // minutes of no input before it pops up
+  ssScene: 'auto',        // 'auto' = a different scene per screen, or 0..4
+  ssDismiss: 'click',     // 'click' = mouse stirs, click/key returns | 'move' = any movement returns
+  ssClock: true,
+  ssRespectMedia: true,   // don't start while a video / call keeps the display awake
+  ssFps: 30,  // OpenRGB profile to load when sync stops ('' = leave the aura colour)
   hotkeyToggle: 'CommandOrControl+Alt+W',
   hotkeyCycle: 'CommandOrControl+Alt+Shift+W',
   firstRun: true

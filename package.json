@@ -2,7 +2,7 @@
   "name": "wisp",
   "desktopName": "wisp.desktop",
   "productName": "WISP",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "WISP - Aura Wisp by Ionity. A living light that follows your focus: a glowing, colour-changeable aura around the active screen and the active window. Windows, macOS and Linux. Tray-controlled, portable or installed.",
   "main": "src/main/main.js",
   "author": {

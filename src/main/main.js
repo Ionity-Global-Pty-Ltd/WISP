@@ -25,6 +25,7 @@ const { Overlays } = require('./overlays');
 const { createTracker } = require('./trackers');
 const { trayImage } = require('./trayIcon');
 const { RgbSync } = require('./rgb');
+const { Screensaver, SCENES } = require('./screensaver');
 const { PRESETS, STYLES, presetById } = require('../shared/presets');
 
 const DEBUG = process.argv.includes('--wisp-debug') || process.env.WISP_DEBUG === '1';
@@ -45,7 +46,7 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-let settings, overlays, tracker, tray, settingsWin = null, rgb = null;
+let settings, overlays, tracker, tray, settingsWin = null, rgb = null, saver = null, lastFullscreen = false;
 let lastFocusId = null;
 let tickTimer = null, raiseTimer = null, lastTrackerError = '';
 const VERSION = app.getVersion();
@@ -91,6 +92,7 @@ function tick() {
     info = { kind: 'none' };
   }
   const state = computeState(info, settings.data);
+  lastFullscreen = !!(info && info.kind === 'window' && info.rect && (info.fullscreen || covers(info.rect, screen.getDisplayMatching(info.rect).bounds)));
   if (info && info.kind === 'window' && info.id !== lastFocusId) {
     if (lastFocusId !== null && rgb) rgb.focusChanged();
     lastFocusId = info.id;
@@ -99,6 +101,7 @@ function tick() {
     const k = JSON.stringify([info.kind, info.id, state.rect]);
     if (k !== lastLogged) { lastLogged = k; log('active', info.kind, info.id || '', JSON.stringify(state.rect), info.title || info.app || ''); }
   }
+  if (saver && saver.active) { state.visible = false; state.rect = null; state.screenAura = false; }
   overlays.push(state);
   pushLive(info, state);
 }
@@ -157,6 +160,7 @@ function applySettings() {
   const eff = effectiveSettings();
   overlays.setSettings(eff);
   if (rgb) rgb.apply(eff);
+  if (saver) saver.apply(eff);
   updateTray();
   registerHotkeys();
   applyLoginItem();
@@ -272,6 +276,8 @@ function buildMenu() {
     check('Puller (glide between windows)', 'puller'),
     check('Hide over full-screen apps', 'hideOnFullscreen'),
     check('Sync case RGB (OpenRGB)', 'rgbSync'),
+    check('Screensaver', 'ssEnabled', { sublabel: `after ${s.ssIdleMinutes} min idle` }),
+    { label: 'Start screensaver now', click: () => saver && saver.show(true) },
     { type: 'separator' },
     { label: 'Settings...', click: () => openSettings() },
     check('Start with my computer', 'launchAtLogin'),
@@ -344,6 +350,7 @@ function settingsPayload() {
     displays: displaysPayload(),
     trayIcon: trayIconData(),
     rgb: rgb ? rgb.status() : { state: 'off', devices: [] },
+    scenes: SCENES,
     portable: !!process.env.PORTABLE_EXECUTABLE_DIR,
     store: !!process.windowsStore
   };
@@ -365,7 +372,7 @@ ipcMain.handle('wisp:set', (_e, patch) => {
   if (!patch || typeof patch !== 'object') return settingsPayload();
   const allowed = ['enabled', 'presetId', 'color', 'style', 'windowAura', 'screenAura', 'wisps', 'puller', 'thickness',
     'glow', 'intensity', 'screenIntensity', 'speed', 'padding', 'radius', 'hideOnFullscreen', 'fps', 'launchAtLogin',
-    'hotkeyToggle', 'hotkeyCycle', 'rgbSync', 'rgbMode', 'rgbBrightness', 'rgbHost', 'rgbPort', 'rgbRestoreProfile'];
+    'hotkeyToggle', 'hotkeyCycle', 'rgbSync', 'rgbMode', 'rgbBrightness', 'rgbHost', 'rgbPort', 'rgbRestoreProfile', 'ssEnabled', 'ssIdleMinutes', 'ssScene', 'ssDismiss', 'ssClock', 'ssRespectMedia', 'ssFps'];
   const clean = {};
   for (const k of allowed) if (k in patch) clean[k] = patch[k];
   if (clean.presetId && clean.presetId !== 'custom') {
@@ -376,6 +383,7 @@ ipcMain.handle('wisp:set', (_e, patch) => {
   return settingsPayload();
 });
 ipcMain.handle('wisp:reset', () => { settings.reset(); return settingsPayload(); });
+ipcMain.handle('wisp:saver-preview', () => { if (saver) saver.show(true); });
 ipcMain.handle('wisp:open', (_e, url) => {
   if (typeof url === 'string' && /^https:\/\/[a-z0-9.-]+(\/|$)/i.test(url)) shell.openExternal(url);
 });
@@ -404,6 +412,8 @@ app.whenReady().then(() => {
   tracker = createTracker({ app, screen, log });
   rgb = new RgbSync({ log });
   rgb.onStatus = () => { broadcastToSettings(); };
+  saver = new Screensaver({ log, overlays, isFullscreen: () => lastFullscreen });
+  saver.onKeysReleased = () => { registered = []; registerHotkeys(); };
   overlays.settings = effectiveSettings();
   overlays.rebuild();
   createTray();
@@ -419,6 +429,7 @@ app.whenReady().then(() => {
   powerMonitor.on('unlock-screen', rebuildSoon);
 
   startEngine();
+  if (process.argv.includes('--screensaver')) setTimeout(() => saver.show(true), 1500);
 
   if (settings.data.firstRun && !process.argv.includes('--hidden')) {
     settings.set({ firstRun: false });
@@ -439,6 +450,7 @@ app.on('will-quit', () => {
   globalShortcut.unregisterAll();
   try { tracker && tracker.stop(); } catch (_) {}
   try { rgb && rgb.dispose(); } catch (_) {}
+  try { saver && saver.dispose(); } catch (_) {}
   try { settings && settings.flush(); } catch (_) {}
   try { overlays && overlays.destroy(); } catch (_) {}
 });

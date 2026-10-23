@@ -24,8 +24,9 @@
 
   // ------------------------------------------------------------ helpers
   const fmt = (k, v) => k === 'thickness' || k === 'padding' ? v + ' px'
-    : k === 'radius' ? (v < 0 ? 'auto' : v + ' px') : k === 'fps' ? v + ' fps' : v + '%';
+    : k === 'radius' ? (v < 0 ? 'auto' : v + ' px') : k === 'fps' || k === 'ssFps' ? v + ' fps' : k === 'ssIdleMinutes' ? (v === 1 ? '1 minute' : v + ' minutes') : v + '%';
   const NUMERIC = new Set(['rgbPort']);
+  const fmtMin = v => v + (v === 1 ? ' minute' : ' minutes');
 
   function hsl(h, s = 92, l = 60) {
     s /= 100; l /= 100;
@@ -169,6 +170,30 @@
     pushPreviewState();
     drawDisplays();
     renderRgb();
+    renderSaver();
+  }
+
+  // ------------------------------------------------------------ screensaver
+  let scenesBuilt = false;
+  function renderSaver() {
+    const box = $('#ssScenes');
+    if (!scenesBuilt && P.scenes) {
+      scenesBuilt = true;
+      const auto = document.createElement('button');
+      auto.className = 'scene auto'; auto.dataset.v = 'auto';
+      auto.innerHTML = '<div class="sth">' + [1, 3, 2, 0, 4].map(i => `<i class="sc${i}"></i>`).join('') + '</div><b>A different scene on each screen</b>';
+      box.appendChild(auto);
+      for (const sc of P.scenes) {
+        const b = document.createElement('button');
+        b.className = 'scene'; b.dataset.v = String(sc.id);
+        b.innerHTML = `<div class="sth sc${sc.id}"></div><b></b>`;
+        b.querySelector('b').textContent = `${sc.id + 1} \u00b7 ${sc.name}`;
+        box.appendChild(b);
+      }
+      $$('#ssScenes .scene').forEach(b => b.addEventListener('click', () => set({ ssScene: b.dataset.v })));
+    }
+    $$('#ssScenes .scene').forEach(b => b.classList.toggle('on', b.dataset.v === String(S.ssScene)));
+    $$('#ssDismiss button').forEach(b => b.classList.toggle('on', b.dataset.v === S.ssDismiss));
   }
 
   // ------------------------------------------------------------ case RGB
@@ -244,6 +269,8 @@
     else el.addEventListener('change', () => set({ [k]: NUMERIC.has(k) ? Number(el.value) : el.value.trim() }));
   });
   $$('#rgbMode button').forEach(b => b.addEventListener('click', () => set({ rgbMode: b.dataset.v })));
+  $$('#ssDismiss button').forEach(b => b.addEventListener('click', () => set({ ssDismiss: b.dataset.v })));
+  $('#ssPreview').addEventListener('click', () => window.wisp.previewSaver());
   $('#rgbProfile').addEventListener('change', e => set({ rgbRestoreProfile: e.target.value }));
   $('#reset').addEventListener('click', async () => { const p = await window.wisp.reset(); P = p; S = p.settings; render(); });
   $('#reveal').addEventListener('click', () => window.wisp.revealData());

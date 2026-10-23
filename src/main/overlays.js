@@ -16,6 +16,7 @@ class Overlays {
     this.wins = new Map(); // displayId -> { win, display, last }
     this.lastState = null;
     this.settings = null;
+    this.hidden = false;
   }
 
   boundsFor(display) {
@@ -70,7 +71,7 @@ class Overlays {
     win.webContents.once('did-finish-load', () => {
       entry.ready = true;
       win.setBounds(b);
-      win.showInactive();
+      if (!this.hidden) win.showInactive();
       if (this.settings) win.webContents.send('wisp:settings', this.settingsFor(display));
       if (this.lastState) this.pushOne(entry, this.lastState, true);
     });
@@ -144,6 +145,7 @@ class Overlays {
   }
 
   setVisible(v) {
+    this.hidden = !v;
     for (const e of this.wins.values()) {
       if (e.win.isDestroyed()) continue;
       if (v) e.win.showInactive(); else e.win.hide();

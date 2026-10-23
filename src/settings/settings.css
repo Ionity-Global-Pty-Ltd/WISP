@@ -319,6 +319,22 @@ body.plat-linux .gnome-bar { display: flex; }
 
 @media (max-width: 1080px) { .content { grid-template-columns: 340px minmax(0, 1fr); } }
 
+/* screensaver scenes */
+.scenes { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.scene { position: relative; padding: 0; border-radius: 12px; overflow: hidden; cursor: pointer; border: 1px solid var(--line); background: var(--surface-2); text-align: left; transition: border-color .2s, box-shadow .2s; }
+.scene .sth { height: 70px; background-size: 200% 200%; animation: sceneDrift 9s ease-in-out infinite alternate; }
+.scene b { display: block; padding: 8px 10px; font-size: 12.5px; }
+.scene.on { border-color: var(--c); box-shadow: 0 0 0 1px var(--c), 0 0 22px -8px var(--c); }
+.scene.auto { grid-column: 1 / -1; }
+.scene.auto .sth { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; padding: 3px; animation: none; background: #07090D; }
+.scene.auto .sth i { border-radius: 6px; background-size: 200% 200%; animation: sceneDrift 9s ease-in-out infinite alternate; }
+@keyframes sceneDrift { to { background-position: 100% 100%; } }
+.sc0 { background-image: radial-gradient(60% 70% at 30% 70%, rgba(235,97,26,.75), transparent 60%), radial-gradient(70% 80% at 70% 30%, rgba(41,82,138,.8), transparent 70%), linear-gradient(160deg, #05070a, #172030); }
+.sc1 { background-image: radial-gradient(60% 70% at 65% 40%, rgba(0,199,255,.8), transparent 60%), radial-gradient(70% 80% at 25% 70%, rgba(17,85,163,.9), transparent 70%), linear-gradient(160deg, #04081a, #0d2860); }
+.sc2 { background-image: radial-gradient(55% 65% at 35% 40%, rgba(255,158,56,.75), transparent 60%), radial-gradient(70% 80% at 70% 70%, rgba(120,70,160,.85), transparent 70%), linear-gradient(160deg, #0f0d1a, #2a1838); }
+.sc3 { background-image: radial-gradient(60% 70% at 60% 55%, rgba(13,242,199,.7), transparent 60%), radial-gradient(70% 80% at 25% 30%, rgba(18,90,140,.85), transparent 70%), linear-gradient(160deg, #03141f, #06323d); }
+.sc4 { background-image: repeating-linear-gradient(115deg, transparent 0 18px, rgba(250,199,66,.75) 18px 19.5px, transparent 19.5px 41px), radial-gradient(70% 80% at 60% 40%, rgba(60,56,66,.9), transparent 70%), linear-gradient(160deg, #08080a, #1d1b21); }
+
 /* case RGB */
 .rgb-head { display: flex; align-items: center; gap: 10px; font-size: 15px; }
 .rgb-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--faint); }
